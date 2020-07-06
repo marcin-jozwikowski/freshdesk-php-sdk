@@ -39,7 +39,8 @@ use GuzzleHttp\Exception\RequestException;
  * via the relevant public properties
  *
  * @package Api
- * @author Matthew Clarkson <mpclarkson@gmail.com>
+ * @author  Matthew Clarkson <mpclarkson@gmail.com>
+ * @author  Marcin Jóźwikowski <marcin@jozwikowski.pl>
  */
 class Api
 {
@@ -180,21 +181,19 @@ class Api
     /**
      * Constructs a new api instance
      *
-     * @api
      * @param string $apiKey
      * @param string $domain
+     * @param bool   $isSubdomain
+     *
      * @throws Exceptions\InvalidConfigurationException
+     * @api
      */
-    public function __construct($apiKey, $domain)
+    public function __construct(string $apiKey, string $domain, bool $isSubdomain = true)
     {
         $this->validateConstructorArgs($apiKey, $domain);
 
-        $this->baseUrl = sprintf('https://%s.freshdesk.com/api/v2', $domain);
-
-        $this->client = new Client([
-                'auth' => [$apiKey, 'X']
-            ]
-        );
+        $this->baseUrl = $isSubdomain ? sprintf('https://%s.freshdesk.com/api/v2', $domain) : $domain;
+        $this->client  = new Client(['auth' => [$apiKey, 'X']]);
 
         $this->setupResources();
     }
@@ -203,16 +202,17 @@ class Api
     /**
      * Internal method for handling requests
      *
-     * @internal
-     * @param $method
-     * @param $endpoint
+     * @param            $method
+     * @param            $endpoint
      * @param array|null $data
      * @param array|null $query
+     *
      * @return mixed|null
      * @throws ApiException
      * @throws ConflictingStateException
      * @throws RateLimitExceededException
      * @throws UnsupportedContentTypeException
+     * @internal
      */
     public function request($method, $endpoint, array $data = null, array $query = null)
     {
@@ -265,6 +265,7 @@ class Api
     /**
      * @param $apiKey
      * @param $domain
+     *
      * @throws Exceptions\InvalidConfigurationException
      * @internal
      *
@@ -286,26 +287,34 @@ class Api
     private function setupResources()
     {
         //People
-        $this->agents = new Agent($this);
+        $this->agents    = new Agent($this);
         $this->companies = new Company($this);
-        $this->contacts = new Contact($this);
-        $this->groups = new Group($this);
+        $this->contacts  = new Contact($this);
+        $this->groups    = new Group($this);
 
         //Tickets
-        $this->tickets = new Ticket($this);
-        $this->timeEntries = new TimeEntry($this);
+        $this->tickets       = new Ticket($this);
+        $this->timeEntries   = new TimeEntry($this);
         $this->conversations = new Conversation($this);
 
         //Discussions
         $this->categories = new Category($this);
-        $this->forums = new Forum($this);
-        $this->topics = new Topic($this);
-        $this->comments = new Comment($this);
+        $this->forums     = new Forum($this);
+        $this->topics     = new Topic($this);
+        $this->comments   = new Comment($this);
 
         //Admin
-        $this->products = new Product($this);
-        $this->emailConfigs = new EmailConfig($this);
-        $this->slaPolicies = new SLAPolicy($this);
+        $this->products      = new Product($this);
+        $this->emailConfigs  = new EmailConfig($this);
+        $this->slaPolicies   = new SLAPolicy($this);
         $this->businessHours = new BusinessHour($this);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
     }
 }
