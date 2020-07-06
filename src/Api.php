@@ -230,32 +230,27 @@ class Api
     /**
      * Performs the request
      *
-     * @internal
+     * @param string $method
+     * @param string $url
+     * @param array  $options
      *
-     * @param $method
-     * @param $url
-     * @param $options
      * @return mixed|null
      * @throws AccessDeniedException
      * @throws ApiException
      * @throws AuthenticationException
      * @throws ConflictingStateException
+     * @throws Exceptions\MethodNotAllowedException
+     * @throws Exceptions\NotFoundException
+     * @throws Exceptions\UnsupportedAcceptHeaderException
+     * @throws Exceptions\ValidationException
+     * @throws RateLimitExceededException
+     * @throws UnsupportedContentTypeException
      */
-    private function performRequest($method, $url, $options) {
+    protected function performRequest(string $method, string $url, array $options): array
+    {
 
         try {
-            switch ($method) {
-                case 'GET':
-                    return json_decode($this->client->get($url, $options)->getBody(), true);
-                case 'POST':
-                    return json_decode($this->client->post($url, $options)->getBody(), true);
-                case 'PUT':
-                    return json_decode($this->client->put($url, $options)->getBody(), true);
-                case 'DELETE':
-                    return json_decode($this->client->delete($url, $options)->getBody(), true);
-                default:
-                    return null;
-            }
+            return json_decode($this->client->$method($url, $options)->getBody(), true);
         } catch (RequestException $e) {
             throw ApiException::create($e);
         }
