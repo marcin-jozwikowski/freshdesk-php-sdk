@@ -216,7 +216,11 @@ class Api
      */
     public function request($method, $endpoint, array $data = null, array $query = null)
     {
-        $options = ['json' => $data];
+        if (isset($data['attachments']) && !empty($data['attachments'])) {
+            $options = $this->prepareMultipartFormData($data);
+        } else {
+            $options = ['json' => $data];
+        }
 
         if (isset($query)) {
             $options['query'] = $query;
@@ -311,5 +315,25 @@ class Api
     public function getBaseUrl(): string
     {
         return $this->baseUrl;
+    }
+
+    private function prepareMultipartFormData(array $data): array
+    {
+        $result = [];
+        foreach ($data as $field => $value) {
+            if ($field === 'attachments') {
+                foreach ($data['attachments'] as $attachment) {
+                    $result[] = $attachment;
+                }
+            } else {
+                $result[] = [
+                    'name'     => $field,
+                    'contents' => $value,
+                ];
+            }
+
+        }
+
+        return ['multipart' => $result];
     }
 }
